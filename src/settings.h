@@ -157,6 +157,8 @@ public:
         return takeString(p);
     }
 
+    std::string getConfigPath() { return takeString(jfn_settings_get_config_path()); }
+
 private:
     Settings() = default;
 

@@ -15,6 +15,7 @@ add_custom_target(generate_version ALL
     COMMAND ${CMAKE_COMMAND}
         -DSOURCE_DIR="${CMAKE_SOURCE_DIR}"
         -DBINARY_DIR="${CMAKE_BINARY_DIR}"
+        -DAPP_PLATFORM="${CMAKE_SYSTEM_NAME}-${CMAKE_SYSTEM_PROCESSOR}"
         -P "${CMAKE_SOURCE_DIR}/cmake/GenerateVersion.cmake"
     BYPRODUCTS "${CMAKE_BINARY_DIR}/src/version.h"
     COMMENT "Checking version info"

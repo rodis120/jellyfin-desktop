@@ -57,6 +57,7 @@ set(NEW_CONTENT
 #define APP_VERSION_FULL \"${APP_VERSION_FULL}\"
 #define APP_USER_AGENT \"JellyfinDesktop/${APP_VERSION_FULL}\"
 #define APP_CEF_VERSION \"${APP_CEF_VERSION}\"
+#define APP_PLATFORM \"${APP_PLATFORM}\"
 ")
 
 set(OLD_CONTENT "")

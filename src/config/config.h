@@ -28,6 +28,8 @@ bool jfn_settings_load(void);
 bool jfn_settings_save(void);
 void jfn_settings_save_async(void);
 
+char* jfn_settings_get_config_path();
+
 // String getters: returned pointer is heap-allocated; caller frees with
 // jfn_settings_free_string. Returns a non-null pointer (possibly empty
 // string) for known fields.

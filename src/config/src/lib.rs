@@ -391,6 +391,12 @@ pub unsafe extern "C" fn jfn_settings_free_string(s: *mut c_char) {
     }
 }
 
+#[unsafe(no_mangle)]
+pub extern "C" fn jfn_settings_get_config_path() -> *mut c_char {
+    let st = state().lock().unwrap();
+    string_to_cstr(&st.path.to_string_lossy())
+}
+
 macro_rules! string_getter {
     ($name:ident, $field:ident) => {
         #[unsafe(no_mangle)]

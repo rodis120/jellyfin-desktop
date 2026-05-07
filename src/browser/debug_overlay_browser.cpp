@@ -10,6 +10,21 @@
 #include "version.h"
 #include "settings.h"
 #include "mpv/handle.h"
+#include "../platform/display_backend.h"
+
+#ifdef _WIN32
+#include <windows.h>
+#include <WinSock2.h>
+#include <iphlpapi.h>
+
+#pragma comment(lib, "IPHLPAPI.lib")
+#else
+#include <ifaddrs.h>
+#include <net/if.h>
+#include <netinet/ip.h>
+#include <netinet/ip6.h>
+#include <arpa/inet.h>
+#endif
 
 #include <cmath>
 #include <functional>
@@ -38,17 +53,102 @@ bool mpv_get_property_bool(mpv_handle* mpv, const char* prop) {
     mpv_get_property(mpv, prop, MPV_FORMAT_FLAG, &flag);
     return static_cast<bool>(flag);
 }
+inline bool mpv_get_property_bool(mpv_handle* mpv, const std::string& prop) {
+    return mpv_get_property_bool(mpv, prop.c_str());
+}
 
 std::string mpv_get_property_std_string(mpv_handle* mpv, const char* prop) {
     auto str = mpv_get_property_osd_string(mpv, prop);
     if(str == nullptr) {
-        return "";
+        return "-";
     }
 
     std::string output(str);
     mpv_free(str);
 
     return output;
+}
+inline std::string mpv_get_property_std_string(mpv_handle* mpv, const std::string& prop) {
+    return mpv_get_property_std_string(mpv, prop.c_str());
+}
+
+void appendAudioFormat(std::stringstream& stream, std::string prop) {
+    std::string audioFormat = MPV_PROPERTY(prop + "/format");
+    if (audioFormat.starts_with("spdif-")) {
+        stream << "passthrough (" << audioFormat.substr(6) << ")";
+    } else {
+        std::string hr = MPV_PROPERTY(prop + "/hr-channels");
+        std::string full = MPV_PROPERTY(prop + "/channels");
+        stream << hr;
+        if (hr != full)
+        stream << " (" << full << ")";
+    }
+}
+
+std::vector<std::string> networkAddresses() {
+    std::vector<std::string> addresses;
+
+#ifdef _WIN32
+    ULONG family = AF_UNSPEC;
+    ULONG flags = GAA_FLAG_SKIP_DNS_SERVER | GAA_FLAG_SKIP_DNS_INFO |
+                    GAA_FLAG_SKIP_MULTICAST | GAA_FLAG_SKIP_ANYCAST;
+    ULONG size = 0;
+    std::vector<uint8_t> addrs;
+
+    int tries = 0;
+
+    DWORD ret;
+    do {
+        addrs.resize(size);
+        ret = GetAdaptersAddresses(family, flags, nullptr, reinterpret_cast<IP_ADAPTER_ADDRESSES*>(addrs.data()), &size);
+        tries++;
+    } while (ret == ERROR_BUFFER_OVERFLOW && tries < 5);
+    if (ret != NO_ERROR) return addresses;
+
+    for(auto adapter = reinterpret_cast<IP_ADAPTER_ADDRESSES*>(addrs.data()); adapter != nullptr; adapter = adapter->Next) {
+        if(adapter->IfType & IF_TYPE_SOFTWARE_LOOPBACK) continue;
+        for(auto addr = adapter->FirstUnicastAddress; addr != nullptr; addr = addr->Next) {
+            char addr_str[46];
+            DWORD addr_str_len = sizeof(addr_str);
+            WSAAddressToStringA(addr->Address.lpSockaddr, addr->Address.iSockaddrLength, NULL, addr_str, &addr_str_len);
+
+            char prefix[] = "fe80::";
+            if (strncmp(prefix, addr_str, sizeof(prefix)-1) == 0) continue;
+
+            addresses.emplace_back(addr_str);
+        }
+    }
+#else
+    ifaddrs* addrs;
+    if(getifaddrs(&addrs) == -1) return addresses;
+
+    for(ifaddrs* entry = addrs; entry != nullptr; entry = entry->ifa_next) {
+        int flags = entry->ifa_flags;
+        if(entry->ifa_addr == nullptr || flags & IFF_LOOPBACK || !(flags & IFF_UP)) continue;
+
+        auto family = entry->ifa_addr->sa_family;
+        if(family == AF_INET) {
+            auto addr = reinterpret_cast<sockaddr_in*>(entry->ifa_addr);
+            char addr_str[INET_ADDRSTRLEN];
+            inet_ntop(family, &addr->sin_addr, addr_str, sizeof(addr_str));
+
+            addresses.emplace_back(addr_str);
+
+        } else if(family == AF_INET6) {
+            auto addr = reinterpret_cast<sockaddr_in6*>(entry->ifa_addr);
+            char addr_str[INET6_ADDRSTRLEN];
+            inet_ntop(family, &addr->sin6_addr, addr_str, sizeof(addr_str));
+
+            char prefix[] = "fe80::";
+            if (strncmp(prefix, addr_str, sizeof(prefix)-1) == 0) continue;
+
+            addresses.emplace_back(addr_str);
+        }
+    }
+    freeifaddrs(addrs);
+#endif
+
+    return addresses;
 }
 
 std::string qoute_string(std::string_view s) {
@@ -119,25 +219,27 @@ bool DebugOverlayBrowser::handleMessage(const std::string& name,
     if (name == "update") {
         std::stringstream debug_info;
         debug_info << "Jellyfin\n";
-        debug_info << "  Version: " << APP_VERSION_FULL " built " __DATE__ " " __TIME__ << "\n";
-        debug_info << "  CEF Version: " << APP_CEF_VERSION << "\n";
-        // debug_info << "  Platform: " << TARGET_PLATFORM "-" TARGET_ARCH << "\n";
+        debug_info << "Version: " << APP_VERSION_FULL " (built " __DATE__ " " __TIME__ << ")\n";
+        debug_info << "CEF Version: " << APP_CEF_VERSION << "\n";
+        debug_info << "User agent: " << APP_USER_AGENT << "\n";
+        debug_info << "Platform: " << APP_PLATFORM << "\n";
 
         debug_info << "\nFiles:\n";
-        // debug_info << "  Config file: " << Settings::instance().getConfigPath() << "\n";
+        debug_info << "  Config file: " << Settings::instance().getConfigPath() << "\n";
 
-        // debug_info << "\nNetwork addresses:\n";
-        // for (auto& addr : networkAddresses()) {
-        //     debug_info << "  " << addr << "\n";
-        // }
+        debug_info << "\nNetwork addresses:\n";
+        for (auto& addr : networkAddresses()) {
+            debug_info << addr << "\n";
+        }
 
         debug_info << "\nClient settings:\n";
         debug_info << Settings::instance().cliSettingsJson() << "\n";
 
         debug_info << "\nWindow:\n";
-        // debug_info << "  Display backend: " << displayBackendToString(g_platform.display) << "\n";
-        debug_info << "  Physical size: " << mpv::osd_pw() << "x" << mpv::osd_ph() << "\n";
-        debug_info << "  Scale: " << mpv::display_scale() << "\n";
+        debug_info << "Display backend: " << displayBackendToString(g_platform.display) << "\n";
+        debug_info << "Physical size: " << g_browsers->physical_w() << "x" << g_browsers->physical_h() << "\n";
+        debug_info << "Logical size: " << g_browsers->logical_w() << "x" << g_browsers->logical_h() << "\n";
+        debug_info << "Scale: " << mpv::display_scale() << "\n";
 
         std::stringstream video_info;
         video_info << "File:\n";
@@ -163,9 +265,9 @@ bool DebugOverlayBrowser::handleMessage(const std::string& name,
         video_info << "Codec: " << MPV_PROPERTY("audio-codec") << "\n";
         video_info << "Bitrate: " << MPV_PROPERTY("audio-bitrate") << "\n";
         video_info << "Channels: ";
-        // appendAudioFormat(video_info, "audio-params");
+        appendAudioFormat(video_info, "audio-params");
         video_info << " -> ";
-        // appendAudioFormat(video_info, "audio-out-params");
+        appendAudioFormat(video_info, "audio-out-params");
         video_info << "\n";
         video_info << "Output driver: " << MPV_PROPERTY("current-ao") << "\n";
         video_info << "\n";
