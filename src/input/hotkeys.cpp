@@ -4,6 +4,7 @@
 #include "../common.h"
 #include "../platform/platform.h"
 #include "../playback/coordinator.h"
+#include "../browser/debug_overlay_browser.h"
 
 namespace input {
 namespace {
@@ -33,6 +34,12 @@ bool hotkey_try_consume(const KeyEvent& e) {
     if (e.code == KeyCode::F || e.code == KeyCode::F11) {
         if (!video_player_active()) return false;
         g_platform.toggle_fullscreen();
+        return true;
+    }
+
+    // Ctrl+Shift+D: toggle debug overlay
+    if (e.code == KeyCode::D && (e.modifiers & EVENTFLAG_CONTROL_DOWN) && (e.modifiers & EVENTFLAG_SHIFT_DOWN)) {
+        DebugOverlayBrowser::toggle();
         return true;
     }
     return false;

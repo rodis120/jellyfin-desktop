@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Debug Overlay</title>
+    <style>
+        * {
+            color: white;
+        }
+        body {
+            display: flex;
+            flex-direction: row;
+            background-color: #10101064;
+        }
+        #debug_info {
+            width: 66%;
+        }
+        #video_info {
+            width: 33%;
+        }
+    </style>
+</head>
+<body>
+    <div id="debug_info"></div>
+    <div id="video_info"></div>
+    <script>
+        function set_debug_info(info) {
+            const field = document.getElementById('debug_info');
+            field.innerText = info;
+        }
+
+        function set_video_info(info) {
+            const field = document.getElementById('video_info');
+            field.innerText = info;
+        }
+
+        window.jmpNative.update();
+        window.setInterval(() => {
+            window.jmpNative.update();
+        }, 1000);
+    </script>
+</body>
+</html>

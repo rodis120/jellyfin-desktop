@@ -590,6 +590,7 @@ if(WIN32)
         src/browser/overlay_browser.cpp
         src/browser/about_browser.cpp
         src/browser/app_menu.cpp
+        src/browser/debug_overlay_browser.cpp
         src/input/dispatch.cpp
         src/input/hotkeys.cpp
         src/paths/paths.cpp
@@ -613,6 +614,7 @@ else()
         src/browser/web_browser.cpp
         src/browser/overlay_browser.cpp
         src/browser/about_browser.cpp
+        src/browser/debug_overlay_browser.cpp
         src/browser/app_menu.cpp
         src/input/dispatch.cpp
         src/input/hotkeys.cpp
