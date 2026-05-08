@@ -34,6 +34,8 @@ char* jfn_log_active_path(void);
 
 void jfn_log_free_string(char* s);
 
+void jfn_censor(char* s);
+
 #ifdef __cplusplus
 }
 #endif

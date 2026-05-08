@@ -63,6 +63,7 @@ std::string mpv_get_property_std_string(mpv_handle* mpv, const char* prop) {
         return "-";
     }
 
+    jfn_censor(str);
     std::string output(str);
     mpv_free(str);
 

@@ -1,6 +1,8 @@
 //! Token redaction for log output. Detects known query-param / JSON / header
 //! patterns that precede a Jellyfin access token and overwrites the token
 //! value with 'x' characters in place, preserving URL/JSON shape.
+use core::slice;
+use std::ffi::{CStr, c_char};
 
 struct PatternRule {
     needle: &'static [u8],
@@ -86,6 +88,19 @@ pub fn contains_secret(buf: &[u8]) -> bool {
 pub fn censor(buf: &mut [u8]) {
     for rule in RULES {
         elide(buf, rule);
+    }
+}
+
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn jfn_censor(buf: *mut c_char) {
+    if buf.is_null() {
+        return;
+    }
+    
+    unsafe {
+        let len = CStr::from_ptr(buf).to_bytes().len();
+        let data = slice::from_raw_parts_mut(buf as *mut u8, len);
+        censor(data);
     }
 }
 
