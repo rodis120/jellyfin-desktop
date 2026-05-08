@@ -27,20 +27,19 @@
     </style>
 </head>
 <body>
-    <div id="debug_info"></div>
+    <div id="debug_info">
+        <div id="app_info"></div><br>
+        <div id="misc_info"></div><br>
+        <div id="window_info"></div>
+    </div>
     <div id="video_info"></div>
     <script>
-        function set_debug_info(info) {
-            const field = document.getElementById('debug_info');
+        function set_info(id, info) {
+            const field = document.getElementById(id);
             field.innerText = info;
         }
 
-        function set_video_info(info) {
-            const field = document.getElementById('video_info');
-            field.innerText = info;
-        }
-
-        window.jmpNative.update();
+        window.jmpNative.init();
         window.setInterval(() => {
             window.jmpNative.update();
         }, 1000);
