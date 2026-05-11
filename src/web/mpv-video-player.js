@@ -44,10 +44,12 @@
             window._mpvVideoPlayerInstance = this;
 
             this._videoDialog = undefined;
+            this._spinner = undefined;
             this._currentSrc = undefined;
             this._timeUpdated = false;
             this._currentPlayOptions = undefined;
             this._endedPending = false;
+            this._buffering = null;
 
             // Support jellyfin-web v10.10.7
             this._currentAspectRatio = undefined;
@@ -69,6 +71,11 @@
                     }
                     window.api.player.setVideoRectangle(0, 0, 0, 0);
                 }
+                if (this._buffering) {
+                    window.clearTimeout(this._buffering);
+                    this._buffering = null;
+                }
+                if(this._spinner) this._spinner.classList.remove('mdlSpinnerActive');
                 this._emitPlaying();
             };
 
@@ -91,6 +98,20 @@
                 console.error(`[Media] [${this.logTag}] media error:`, error);
                 this.events.trigger(this, 'error', [{ type: 'mediadecodeerror' }]);
             };
+
+            this.handlers.onBuffering = () => {
+                if (this._spinner && !this._paused) this._buffering = window.setTimeout(() => {
+                    this._spinner.classList.add('mdlSpinnerActive');
+                }, 1000);
+            }
+
+            this.handlers.onBufferingEnd = () => {
+                if (this._buffering) {
+                    window.clearTimeout(this._buffering);
+                    this._buffering = null;
+                }
+                if (this._spinner) this._spinner.classList.remove('mdlSpinnerActive');
+            }
         }
 
         async play(options) {
@@ -282,6 +303,7 @@
             } else {
                 this._videoDialog = dlg;
             }
+            this._spinner = document.querySelector('.mdl-spinner');
 
             const existing = dlg.querySelector('.mpvPoster');
             if (existing) existing.remove();

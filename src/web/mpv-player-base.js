@@ -32,7 +32,9 @@
                 onError: (error) => {
                     console.error(`[Media] [${this.logTag}] media error:`, error);
                     this.events.trigger(this, 'error', [{ type: 'mediadecodeerror' }]);
-                }
+                },
+                onBuffering: null,
+                onBufferingEnd: null,
             };
 
             this.setVolume(this.getSavedVolume() * 100, false);
@@ -50,6 +52,8 @@
             p.updateDuration.connect(this.handlers.onDuration);
             p.error.connect(this.handlers.onError);
             p.paused.connect(this.handlers.onPause);
+            p.buffering.connect(this.handlers.onBuffering);
+            p.bufferingEnd.connect(this.handlers.onBufferingEnd);
         }
 
         disconnectSignals() {
@@ -63,6 +67,8 @@
             p.updateDuration.disconnect(this.handlers.onDuration);
             p.error.disconnect(this.handlers.onError);
             p.paused.disconnect(this.handlers.onPause);
+            p.buffering.disconnect(this.handlers.onBuffering);
+            p.bufferingEnd.disconnect(this.handlers.onBufferingEnd);
         }
 
         onEndedInternal() {

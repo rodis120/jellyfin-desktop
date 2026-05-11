@@ -108,7 +108,15 @@ void BrowserPlaybackSink::deliver(const PlaybackEvent& ev) {
                               + json.ToString() + ")");
         break;
     }
-    case PlaybackEvent::Kind::BufferingChanged:
+    case PlaybackEvent::Kind::BufferingChanged: {
+        if (ev.snapshot.buffering) {
+            g_web_browser->execJs("window._nativeEmit('buffering')");
+        } else {
+            g_web_browser->execJs("window._nativeEmit('bufferingEnd')");
+        }
+
+        break;
+    }
     case PlaybackEvent::Kind::MediaTypeChanged:
     case PlaybackEvent::Kind::MetadataChanged:
     case PlaybackEvent::Kind::ArtworkChanged:

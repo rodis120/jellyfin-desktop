@@ -178,6 +178,7 @@
             canceled: createSignal('canceled'),
             error: createSignal('error'),
             buffering: createSignal('buffering'),
+            bufferingEnd: createSignal('bufferingEnd'),
             seeking: createSignal('seeking'),
             positionUpdate: createSignal('positionUpdate'),
             updateDuration: createSignal('updateDuration'),
