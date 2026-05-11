@@ -105,7 +105,9 @@
                 transparentTitlebar: _savedSettings.transparentTitlebar !== false,
                 titlebarThemeColor: _savedSettings.titlebarThemeColor !== false,
                 logLevel: _savedSettings.logLevel || '',
-                deviceName: _savedSettings.deviceName || ''
+                deviceName: _savedSettings.deviceName || '',
+                bufferingAnimation: _savedSettings.bufferingAnimation !== false,
+                bufferingAnimationDelay: _savedSettings.bufferingAnimationDelay || 1000,
             }
         },
         settingsDescriptions: {
@@ -133,7 +135,9 @@
                     { value: 'debug', title: 'Debug' },
                     { value: 'warn', title: 'Warning' },
                     { value: 'error', title: 'Error' }
-                ]}
+                ]},
+                { key: 'bufferingAnimation', displayName: 'Buffering Animation', help: 'Show buffering animation.' },
+                { key: 'bufferingAnimationDelay', displayName: 'Buffering Animation Delay', help: 'Show animation only if buffering takes longer than specified time in miliseconds.', inputType: 'number' }
             ]
         },
         settingsUpdate: [],

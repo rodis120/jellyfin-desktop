@@ -100,9 +100,10 @@
             };
 
             this.handlers.onBuffering = () => {
+                if (!window.jmpInfo.settings.bufferingAnimation) return;
                 if (this._spinner && !this._paused) this._buffering = window.setTimeout(() => {
                     this._spinner.classList.add('mdlSpinnerActive');
-                }, 1000);
+                }, window.jmpInfo.settings.bufferingAnimationDelay);
             }
 
             this.handlers.onBufferingEnd = () => {

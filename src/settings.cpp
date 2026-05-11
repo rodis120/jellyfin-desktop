@@ -83,6 +83,8 @@ bool Settings::load() {
     force_transcoding_ = jsonBool(root, "forceTranscoding", false);
     device_name_ = jsonStr(root, "deviceName");
     if (device_name_.size() > kDeviceNameMax) device_name_.resize(kDeviceNameMax);
+    buffering_animation_ = jsonBool(root, "bufferingAnimation", true);
+    buffering_animation_delay_ = jsonInt(root, "bufferingAnimationDelay", 1000);
 
     cJSON_Delete(root);
     return true;
@@ -120,6 +122,8 @@ static std::string buildSettingsJson(const Settings& s, bool pretty) {
     if (!s.logLevel().empty()) cJSON_AddStringToObject(root, "logLevel", s.logLevel().c_str());
     if (s.forceTranscoding()) cJSON_AddBoolToObject(root, "forceTranscoding", true);
     if (!s.deviceName().empty()) cJSON_AddStringToObject(root, "deviceName", s.deviceName().c_str());
+    if (!s.bufferingAnimation()) cJSON_AddBoolToObject(root, "bufferingAnimation", false);
+    if (s.bufferingAnimationDelay() != 1000) cJSON_AddNumberToObject(root, "bufferingAnimationDelay", s.bufferingAnimationDelay());
 
     char* str = pretty ? cJSON_Print(root) : cJSON_PrintUnformatted(root);
     std::string result(str);
@@ -164,6 +168,8 @@ std::string Settings::cliSettingsJson() const {
     cJSON_AddBoolToObject(root, "forceTranscoding", force_transcoding_);
     if (!device_name_.empty()) cJSON_AddStringToObject(root, "deviceName", device_name_.c_str());
     cJSON_AddStringToObject(root, "deviceNameDefault", platformDeviceName().c_str());
+    if (!buffering_animation_) cJSON_AddBoolToObject(root, "bufferingAnimation", false);
+    if (buffering_animation_delay_ != 1000) cJSON_AddNumberToObject(root, "bufferingAnimationDelay", buffering_animation_delay_);
 
     cJSON* opts = cJSON_AddArrayToObject(root, "hwdecOptions");
     for (const auto& o : hwdecOptions())

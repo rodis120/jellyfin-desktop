@@ -69,6 +69,12 @@ public:
     const std::string& deviceName() const { return device_name_; }
     void setDeviceName(const std::string& v);
 
+    bool bufferingAnimation() const { return buffering_animation_; }
+    void setBufferingAnimation(bool v) { buffering_animation_ = v; }
+
+    int bufferingAnimationDelay() const { return buffering_animation_delay_; }
+    void setBufferingAnimationDelay(int v) { buffering_animation_delay_ = v; }
+
     // System hostname, truncated to the server's 64-char DeviceName limit.
     // Used when no explicit override is set.
     static std::string platformDeviceName();
@@ -98,6 +104,8 @@ private:
     std::string log_level_;
     bool force_transcoding_ = false;
     std::string device_name_;
+    bool buffering_animation_ = true;
+    int buffering_animation_delay_ = 1000;
 
     std::mutex save_mutex_;  // Prevent concurrent saves
 };

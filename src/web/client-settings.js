@@ -271,6 +271,30 @@
                         helpText.textContent = setting.help;
                         container.appendChild(helpText);
                     }
+                } else if (setting.inputType == 'number') {
+                    container.className = setting.help
+                        ? 'inputContainer inputContainer-withDescription'
+                        : 'inputContainer';
+                    const labelText = document.createElement('label');
+                    labelText.className = 'inputLabel';
+                    labelText.textContent = setting.displayName;
+                    container.appendChild(labelText);
+                    const control = document.createElement('input');
+                    control.className = 'emby-input';
+                    control.type = 'number';
+                    control.setAttribute('is', 'emby-input');
+                    control.valueAsNumber = values[setting.key] || '';
+                    control.addEventListener('change', () => {
+                        jmpInfo.settings[section][setting.key] = control.valueAsNumber;
+                        window.api.settings.setValue(section, setting.key, control.valueAsNumber);
+                    });
+                    container.appendChild(control);
+                    if (setting.help) {
+                        const helpText = document.createElement('div');
+                        helpText.className = 'fieldDescription';
+                        helpText.textContent = setting.help;
+                        container.appendChild(helpText);
+                    }
                 } else {
                     container.className = setting.help
                         ? 'checkboxContainer checkboxContainer-withDescription'
